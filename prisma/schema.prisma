@@ -1,0 +1,137 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(dbgenerated("gen_random_uuid()"))
+  userId            String  @unique
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  subscribed        Boolean @default(false)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user")
+
+  @@unique([provider, providerAccountId], map: "unique_provider_account")
+}
+
+model Session {
+  id           String   @id @default(dbgenerated("gen_random_uuid()"))
+  sessiontoken String   @unique
+  userid       String
+  expires      DateTime @db.Timestamp(6)
+  User         User     @relation(fields: [userid], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_session_user")
+}
+
+model User {
+  id            String    @id @default(dbgenerated("gen_random_uuid()"))
+  email         String    @unique
+  password      String?
+  name          String?
+  image         String?
+  createdat     DateTime  @default(now()) @db.Timestamp(6)
+  updatedat     DateTime  @default(now()) @db.Timestamp(6)
+  emailVerified DateTime? @db.Timestamp(6)
+  account       Account?
+  Comment       Comment[]
+  Post          Post[]
+  Profile       Profile?
+  Session       Session[]
+}
+
+model appointments {
+  appointment_id Int       @id @default(autoincrement())
+  patient_id     Int?
+  doctor_id      Int?
+  time           DateTime? @db.Timestamp(6)
+  doctors        doctors?  @relation(fields: [doctor_id], references: [doctor_id], onDelete: NoAction, onUpdate: NoAction)
+  patients       patients? @relation(fields: [patient_id], references: [patient_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model doctors {
+  doctor_id    Int            @id @default(autoincrement())
+  doctor_name  String?        @db.VarChar(30)
+  schedule     String?
+  salary       Decimal?       @db.Money
+  profile      String?        @db.VarChar(30)
+  appointments appointments[]
+  profiles     profiles?      @relation(fields: [profile], references: [profile_name], onDelete: NoAction, onUpdate: NoAction, map: "fk_profile")
+  treatments   treatments[]
+}
+
+model drugs {
+  drug_id    Int          @id @default(autoincrement())
+  drug_name  String?      @db.VarChar(30)
+  profile    Int?
+  profiles   profiles?    @relation(fields: [profile], references: [profile_id], onDelete: NoAction, onUpdate: NoAction, map: "drugs_drug_profile_fkey")
+  treatments treatments[]
+}
+
+model patients {
+  patient_id     Int            @id @default(autoincrement())
+  patient_name   String?        @db.VarChar(30)
+  height         Decimal?       @db.Decimal(4, 1)
+  weight         Decimal?       @db.Decimal(4, 1)
+  medical_record String?
+  appointments   appointments[]
+  treatments     treatments[]
+}
+
+model profiles {
+  profile_id   Int       @id @default(autoincrement())
+  profile_name String?   @unique(map: "unique_name") @db.VarChar(30)
+  doctors      doctors[]
+  drugs        drugs[]
+}
+
+model treatments {
+  treatment_id Int      @id @default(autoincrement())
+  patient_id   Int
+  doctor_id    Int
+  treatment    String
+  drug_id      Int?
+  drugs        drugs?   @relation(fields: [drug_id], references: [drug_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_drug")
+  doctors      doctors  @relation(fields: [doctor_id], references: [doctor_id], onDelete: NoAction, onUpdate: NoAction)
+  patients     patients @relation(fields: [patient_id], references: [patient_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model Comment {
+  id        String   @id @default(dbgenerated("gen_random_uuid()"))
+  text      String
+  createdat DateTime @default(now()) @db.Timestamp(6)
+  postid    String
+  authorid  String
+  User      User     @relation(fields: [authorid], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_comment_author")
+  Post      Post     @relation(fields: [postid], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_post")
+}
+
+model Post {
+  id        String    @id @default(dbgenerated("gen_random_uuid()"))
+  title     String
+  content   String?
+  published Boolean   @default(false)
+  createdat DateTime  @default(now()) @db.Timestamp(6)
+  updatedat DateTime  @default(now()) @db.Timestamp(6)
+  authorid  String
+  Comment   Comment[]
+  User      User      @relation(fields: [authorid], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_author")
+}
+
+model Profile {
+  id        String  @id @default(dbgenerated("gen_random_uuid()"))
+  bio       String?
+  avatarurl String?
+  userid    String  @unique
+  User      User    @relation(fields: [userid], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_user")
+}

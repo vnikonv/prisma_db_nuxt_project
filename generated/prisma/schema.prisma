@@ -1,0 +1,119 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  name          String?
+  emailVerified DateTime?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  profile  Profile?
+  posts    Post[]
+  comments Comment[]
+  sessions Session[]
+}
+
+model Profile {
+  id        String  @id @default(cuid())
+  bio       String?
+  avatarUrl String?
+  userId    String  @unique
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  title     String
+  content   String?
+  published Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  authorId  String
+
+  author   User      @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments Comment[]
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  text      String
+  createdAt DateTime @default(now())
+  postId    String
+  authorId  String
+
+  post   Post @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+
+// CREATE TABLE "User" (
+//   id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
+//   email TEXT UNIQUE NOT NULL,
+//   password TEXT NOT NULL,
+//   name TEXT,
+//   emailVerified TIMESTAMP,
+//   image TEXT,
+//   createdAt TIMESTAMP NOT NULL DEFAULT NOW(),
+//   updatedAt TIMESTAMP NOT NULL DEFAULT NOW()
+// );
+//
+// CREATE TABLE "Profile" (
+//   id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
+//   bio TEXT,
+//   avatarUrl TEXT,
+//   userId TEXT UNIQUE NOT NULL,
+//   CONSTRAINT fk_user FOREIGN KEY(userId) REFERENCES "User"(id) ON DELETE CASCADE
+// );
+//
+// CREATE TABLE "Post" (
+//   id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
+//   title TEXT NOT NULL,
+//   content TEXT,
+//   published BOOLEAN NOT NULL DEFAULT FALSE,
+//   createdAt TIMESTAMP NOT NULL DEFAULT NOW(),
+//   updatedAt TIMESTAMP NOT NULL DEFAULT NOW(),
+//   authorId TEXT NOT NULL,
+//   CONSTRAINT fk_author FOREIGN KEY(authorId) REFERENCES "User"(id) ON DELETE CASCADE
+// );
+//
+// CREATE TABLE "Comment" (
+//   id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
+//   text TEXT NOT NULL,
+//   createdAt TIMESTAMP NOT NULL DEFAULT NOW(),
+//   postId TEXT NOT NULL,
+//   authorId TEXT NOT NULL,
+//   CONSTRAINT fk_post FOREIGN KEY(postId) REFERENCES "Post"(id) ON DELETE CASCADE,
+//   CONSTRAINT fk_comment_author FOREIGN KEY(authorId) REFERENCES "User"(id) ON DELETE CASCADE
+// );
+//
+// CREATE TABLE "Session" (
+//   id TEXT PRIMARY KEY DEFAULT gen_random_uuid(),
+//   sessionToken TEXT UNIQUE NOT NULL,
+//   userId TEXT NOT NULL,
+//   expires TIMESTAMP NOT NULL,
+//   CONSTRAINT fk_session_user FOREIGN KEY(userId) REFERENCES "User"(id) ON DELETE CASCADE
+// );
