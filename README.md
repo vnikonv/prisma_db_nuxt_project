@@ -1,2 +1,2 @@
 # My First Full-stack Project
-The front-end is built on Nuxt with Prisma for DB connection. The website implements authorization via NuxtAuth and Github. The web interface allows CRUD operations. The website CSS is made with Tailwinds.
+This front-end application is built on Nuxt with Prisma for DB connectivity. Authorization is implemented via NuxtAuth and Github. The web interface allows CRUD operations. The CSS is made with Tailwinds.
